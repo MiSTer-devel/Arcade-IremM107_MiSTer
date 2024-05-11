@@ -76,10 +76,10 @@ reg [9:0] hint_line;
 reg [15:0] misc_reg;
 
 assign hsync = hcnt < 10'd71 || hcnt > 10'd454;
-assign hblank = hcnt < 10'd103 || hcnt > 10'd422;
+assign hblank = hcnt < 10'd101 || hcnt > 10'd422;
 assign vblank = vcnt > 10'd367 || vcnt < 10'd144;
 assign vsync = vcnt > 10'd114 && vcnt < 10'd125;
-assign hpulse = hcnt == 10'd48;
+assign hpulse = hcnt == 10'd46;
 assign vpulse = (vcnt == 10'd124 && hcnt > 10'd260) || (vcnt == 10'd125 && hcnt < 10'd260);
 assign color_blank = hblank | vblank | misc_reg[0];
 
@@ -91,8 +91,8 @@ assign hint = VE == hint_line && hcnt > 10'd422 && ~paused;
 always_ff @(posedge clk) begin
     if (ce_pix) begin
         hcnt <= hcnt + 10'd1;
-        if (hcnt == 10'd471) begin
-            hcnt <= 10'd48;
+        if (hcnt == 10'd469) begin
+            hcnt <= 10'd46;
             vcnt <= vcnt + 10'd1;
             if (vcnt == 10'd375) begin
                 vcnt <= 10'd114;
@@ -150,6 +150,7 @@ wire [14:0] layer_vram_addr[4];
 reg layer_load[4];
 wire layer_prio[4];
 wire [10:0] layer_color[4];
+wire layer_enabled[4];
 reg [15:0] vram_latch;
 
 reg [1:0] cpu_access_st;
@@ -253,79 +254,89 @@ always_ff @(posedge clk) begin
                     rowscroll_active <= 0;
                 end
                 endcase
-
-                
+ 
             end else begin
                 if (ce_pix) begin
                     case(mem_cyc)
-                    3'd0: begin
-                        vram_addr <= layer_vram_addr[0];
-                    end
-                    3'd1: begin
-                        vram_addr <= layer_vram_addr[1];
-                    end
-                    3'd2: begin
-                        vram_addr <= layer_vram_addr[2];
-                    end
-                    3'd3: begin
-                        vram_addr <= layer_vram_addr[3];
-                    end
-                    3'd6: begin
-                        if (cpu_access_st == 2'd1) begin
-                            vram_addr <= addr[15:1];
-                            vram_we <= cpu_access_we;
-                            vram_dout <= cpu_access_din;
-                            cpu_access_st <= 2'd2;
+                        3'd0: begin
+                            vram_addr <= layer_vram_addr[0];
                         end
-                    end
-                    3'd7: begin
-                        if (cpu_access_st == 2'd2) begin
-                            cpu_access_st <= 2'd0;
-                            cpu_access_we <= 0;
-                            cpu_dout <= vram_din;
+                        3'd2: begin
+                            vram_addr <= layer_vram_addr[1];
                         end
-
-                        if (rowscroll_pending) begin
-                            rowscroll_pending <= 0;
-                            rowscroll_active <= 1;
-                            rs_cyc <= 4'd0;
+                        3'd4: begin
+                            vram_addr <= layer_vram_addr[2];
                         end
-                    end
-                    endcase
-                end else begin
-                    case(mem_cyc)
-                    3'd1: begin
-                        vram_addr[0] <= 1;
-                        vram_latch <= vram_din;
-                        layer_load[0] <= 1;
-                    end
-                    3'd2: begin
-                        vram_addr[0] <= 1;
-                        vram_latch <= vram_din;
-                        layer_load[1] <= 1;
-                    end
-                    3'd3: begin
-                        vram_addr[0] <= 1;
-                        vram_latch <= vram_din;
-                        layer_load[2] <= 1;
-                    end
-                    3'd4: begin
-                        vram_addr[0] <= 1;
-                        vram_latch <= vram_din;
-                        layer_load[3] <= 1;
-                    end
+                        3'd6: begin
+                            vram_addr <= layer_vram_addr[3];
+                        end
+                        default: begin
+                            if (cpu_access_st == 2'd1) begin
+                                vram_addr <= addr[15:1];
+                                vram_we <= cpu_access_we;
+                                vram_dout <= cpu_access_din;
+                                cpu_access_st <= 2'd2;
+                            end
+                        end
                     endcase
 
                     prio_out <= layer_prio[0] | layer_prio[1] | layer_prio[2] | layer_prio[3];
+
+                    // determine base opaque color
+                    if (layer_enabled[3])
+                        color_out <= layer_color[3];
+                    else if (layer_enabled[2])
+                        color_out <= layer_color[2];
+                    else if (layer_enabled[1])
+                        color_out <= layer_color[1];
+                    else
+                        color_out <= layer_color[0];
+
+                    // override with transparent
                     if (|layer_color[0][3:0]) begin
                         color_out <= layer_color[0];
                     end else if (|layer_color[1][3:0]) begin
                         color_out <= layer_color[1];
                     end else if (|layer_color[2][3:0]) begin
                         color_out <= layer_color[2];
-                    end else begin
-                        color_out <= layer_color[3];
                     end
+
+                end else if (ce) begin
+                    case(mem_cyc)
+                        3'd1: begin
+                            vram_addr[0] <= 1;
+                            vram_latch <= vram_din;
+                            layer_load[0] <= 1;
+                        end
+                        3'd3: begin
+                            vram_addr[0] <= 1;
+                            vram_latch <= vram_din;
+                            layer_load[1] <= 1;
+                        end
+                        3'd5: begin
+                            vram_addr[0] <= 1;
+                            vram_latch <= vram_din;
+                            layer_load[2] <= 1;
+                        end
+                        3'd7: begin
+                            vram_addr[0] <= 1;
+                            vram_latch <= vram_din;
+                            layer_load[3] <= 1;
+                        end
+                        default: begin
+                            if (cpu_access_st == 2'd2) begin
+                                cpu_access_st <= 2'd0;
+                                cpu_access_we <= 0;
+                                cpu_dout <= vram_din;
+                            end
+                            
+                            if (rowscroll_pending && cpu_access_st == 2'd0) begin
+                                rowscroll_pending <= 0;
+                                rowscroll_active <= 1;
+                                rs_cyc <= 4'd0;
+                            end
+                        end
+                    endcase
                 end
             end
         end
@@ -405,6 +416,7 @@ generate
 
             .color_out(layer_color[i]),
             .prio_out(layer_prio[i]),
+            .color_enabled(layer_enabled[i]),
 
             .sdr_addr(rom_addr[i]),
             .sdr_data(rom_data[i]),

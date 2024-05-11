@@ -77,8 +77,12 @@ singleport_unreg_ram #(.widthad(13), .width(16), .name("PALRAM")) ram
     .data(din)
 );
 
+reg cb;
 always_ff @(posedge clk) begin
-    if (ce_pix) rgb_out <= color_blank ? 16'd0 : dout;
+    if (ce_pix) begin
+        cb <= color_blank;
+        rgb_out <= cb ? 16'd0 : dout;
+    end
 end
 
 endmodule

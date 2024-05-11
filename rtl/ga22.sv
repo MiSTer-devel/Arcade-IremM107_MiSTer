@@ -105,7 +105,7 @@ end
 reg [8:0] V;
 wire [8:0] VE = V ^ {9{NL}};
 
-enum { NEW_LINE, NEW_LINE2, READ, WRITE } state;
+enum { NEW_LINE, NEW_LINE2, NEW_LINE3, READ, WRITE } state;
 
 task advance_obj();
     obj_data <= obj_in;
@@ -138,7 +138,7 @@ always_ff @(posedge clk) begin
             if (hpulse) begin
                 V <= V + 9'd1;
                 obj_idx10 <= 10'd0;
-                scan_pos <= 10'd44;
+                scan_pos <= 10'd42;
                 scan_toggle <= ~scan_toggle;
                 sdr_refresh <= 1;
                 state <= NEW_LINE;
@@ -160,11 +160,15 @@ always_ff @(posedge clk) begin
         end
         NEW_LINE2: begin
             sdr_refresh <= 1;
+            state <= NEW_LINE3;
+        end
+        NEW_LINE3: begin
+            sdr_refresh <= 1;
             advance_obj();
             state <= READ;
         end
         READ: begin
-            if (~obj_idx10[9]) begin
+            if (obj_idx10 < 10'h201) begin
                 end_span <= ( 4'd1 << obj_width ) - 1;
                 height_px = 9'd16 << obj_height;
                 width = 4'd1 << obj_width;
