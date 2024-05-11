@@ -702,8 +702,8 @@ video_freak video_freak(
     .VIDEO_ARY(VIDEO_ARY),
 
     .VGA_DE_IN(VGA_DE_MIXER),
-    .ARX((!ar) ? ( no_rotate ? 12'd4 : 12'd3 ) : (ar - 1'd1)),
-    .ARY((!ar) ? ( no_rotate ? 12'd3 : 12'd4 ) : 12'd0),
+    .ARX((!ar) ? ( no_rotate ? 12'd10 : 12'd7 ) : (ar - 1'd1)),
+    .ARY((!ar) ? ( no_rotate ? 12'd7 : 12'd10 ) : 12'd0),
     .CROP_SIZE(0),
     .CROP_OFF(0),
     .SCALE(scale)
