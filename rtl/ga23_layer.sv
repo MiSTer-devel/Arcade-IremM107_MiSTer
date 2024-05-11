@@ -43,6 +43,7 @@ module ga23_layer(
 
     output prio_out,
     output [10:0] color_out,
+    output color_enabled,
 
     input [31:0] sdr_data,
     output reg [21:0] sdr_addr,
@@ -83,7 +84,7 @@ always_ff @(posedge clk) begin
             sdr_addr <= { attrib[12], index, flip_y ? ~y[2:0] : y[2:0], 2'b00 };
             sdr_req <= 1;
             palette <= attrib[6:0];
-            prio <= attrib[9] ? 2'b11 : attrib[8:7];
+            prio <= attrib[9:8];
             flip_x <= attrib[10] ^ NL;
             offset <= x[2:0] ^ {3{NL}};
         end
@@ -111,5 +112,5 @@ ga23_shifter shifter(
 
 assign color_out = enabled ? shift_color_out : 11'd0;
 assign prio_out = enabled ? ( ( shift_prio_out[0] & shift_color_out[3] ) | ( shift_prio_out[1] & |shift_color_out[3:0] ) ) : 1'b0;
-
+assign color_enabled = enabled;
 endmodule

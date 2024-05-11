@@ -123,6 +123,7 @@ wire inst_flipx = inst_obj[8];
 wire inst_flipy = inst_obj[9];
 wire inst_end = inst_obj[15];
 wire [9:0] inst_x = inst_obj[57:48];
+wire [9:0] inst_height_px = inst_height == 0 ? 10'd16 : inst_height == 1 ? 10'd32 : inst_height == 3 ? 10'd48 : 10'd64;
 
 always_ff @(posedge clk_ram) begin
     if (sdr_req) sdr_rdy2 <= 0;
@@ -250,7 +251,7 @@ always_ff @(posedge clk) begin
             end
 
             WRITE_INST0: begin
-                copy_dout[8:0] <= base_y + inst_y;
+                copy_dout[8:0] <= base_flipy ? (base_y - (inst_y + inst_height_px)) : (base_y + inst_y);
                 copy_dout[10:9] <= inst_height;
                 copy_dout[12:11] <= 2'd0; // width
                 copy_dout[15:13] <= 3'd0; // layer
@@ -281,7 +282,7 @@ always_ff @(posedge clk) begin
             end
 
             WRITE_INST3: begin
-                copy_dout[9:0] <= base_x + inst_x;
+                copy_dout[9:0] <= base_flipx ? (base_x - inst_x) : (base_x + inst_x);
                 copy_obj_addr <= {copy_obj_idx, 2'b11};
                 copy_obj_we <= 1;
                 copy_obj_idx <= copy_obj_idx - 9'd1;

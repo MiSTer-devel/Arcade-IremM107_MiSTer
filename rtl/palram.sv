@@ -48,9 +48,8 @@ wire obj_pal_bank = 0; // TODO ~vid_ctrl[13] & obj_prio;
 wire obj_avail = obj_active; // TODO ~vid_ctrl[7] & obj_active;
 
 wire n_sela = ~dma_busy & (
-    ( vid_ctrl[13] & obj_prio & obj_avail ) |
+    ( obj_prio & obj_avail ) |
     ( ~obj_prio & pf_prio & obj_avail ) |
-    ( ~vid_ctrl[13] & obj_prio & pf_prio & obj_avail ) |
     ( vid_ctrl[12] ) |
     ga21_req
 );
