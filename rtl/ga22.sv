@@ -137,16 +137,17 @@ always_ff @(posedge clk) begin
             scan_pos <= scan_pos + 10'd1;
             if (hpulse) begin
                 V <= V + 9'd1;
+
+                if (vpulse) begin
+                    V <= 9'd126;
+                end
+
                 obj_idx10 <= 10'd0;
                 scan_pos <= 10'd42;
                 scan_toggle <= ~scan_toggle;
                 sdr_refresh <= 1;
                 state <= NEW_LINE;
             end
-        end
-
-        if (vpulse) begin
-            V <= 9'd126;
         end
 
         case(state)

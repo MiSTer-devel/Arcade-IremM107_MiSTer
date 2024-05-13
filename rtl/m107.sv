@@ -494,7 +494,7 @@ palram palram(
 
     .color_blank,
 
-    .dma_busy(dma_busy),
+    .dma_busy(pal_busy),
 
     .cpu_addr(cpu_mem_addr[10:1]),
 
@@ -519,10 +519,11 @@ wire [24:0] sdr_ga21_addr, sdr_ga22_addr;
 wire sdr_ga21_req, sdr_ga22_req;
 wire sdr_ga22_refresh;
 
-assign sdr_sprite_addr = dma_busy ? sdr_ga21_addr : sdr_ga22_addr;
-assign sdr_sprite_req = dma_busy ? sdr_ga21_req : sdr_ga22_req;
-assign sdr_sprite_refresh = dma_busy ? 1'b0 : sdr_ga22_refresh;
+assign sdr_sprite_addr = obj_busy ? sdr_ga21_addr : sdr_ga22_addr;
+assign sdr_sprite_req = obj_busy ? sdr_ga21_req : sdr_ga22_req;
+assign sdr_sprite_refresh = obj_busy ? 1'b0 : sdr_ga22_refresh;
 
+wire pal_busy, obj_busy;
 
 GA21 ga21(
     .clk(clk_sys),
@@ -541,6 +542,8 @@ GA21 ga21(
     .wr(MWR | IOWR),
 
     .busy(dma_busy),
+    .pal_busy,
+    .obj_busy,
 
     .obj_dout(objram_data),
     .obj_din(objram_q),

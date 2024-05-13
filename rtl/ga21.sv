@@ -34,6 +34,8 @@ module GA21(
     input wr,
 
     output busy,
+    output pal_busy,
+    output obj_busy,
 
     output [15:0] obj_dout,
     input [15:0] obj_din,
@@ -72,6 +74,8 @@ reg obj_addr_high = 0;
 enum {
     IDLE,
     IDLE_DELAY,
+    INIT_SCAN_OBJ,
+    SCAN_OBJ,
     INIT_COPY_PAL,
     COPY_PAL,
     INIT_CLEAR_OBJ,
@@ -125,6 +129,8 @@ wire inst_end = inst_obj[15];
 wire [9:0] inst_x = inst_obj[57:48];
 wire [9:0] inst_height_px = inst_height == 0 ? 10'd16 : inst_height == 1 ? 10'd32 : inst_height == 3 ? 10'd48 : 10'd64;
 
+reg [15:0] delay_cnt;
+
 always_ff @(posedge clk_ram) begin
     if (sdr_req) sdr_rdy2 <= 0;
     if (sdr_rdy) sdr_rdy2 <= 1;
@@ -152,7 +158,7 @@ always_ff @(posedge clk) begin
 
         if (reg_cs & wr) begin
             if (din[11]) begin
-                copy_state <= INIT_COPY_PAL;
+                copy_state <= INIT_SCAN_OBJ;
             end
             //if (addr == 12'h0) reg_obj_ptr <= din[7:0];
             //if (addr == 12'h1) reg_direct_access <= din[7:0];
@@ -170,6 +176,19 @@ always_ff @(posedge clk) begin
             IDLE_DELAY: copy_state <= IDLE;
             IDLE: begin
             end
+            
+            INIT_SCAN_OBJ: begin
+                delay_cnt <= 0;
+                copy_state <= SCAN_OBJ;
+            end
+            
+            SCAN_OBJ: begin
+                delay_cnt <= delay_cnt + 16'd1;
+                if (delay_cnt == 16'hb00) begin
+                    copy_state <= INIT_COPY_PAL;
+                end
+            end
+            
             INIT_COPY_PAL: begin
                 buffer_src_addr <= 12'h800;
                 copy_pal_addr <= ~12'd0;
@@ -295,6 +314,8 @@ always_ff @(posedge clk) begin
                     copy_state <= WAIT_SDR;
                 end
             end
+
+            default: begin end
             endcase
         end
     end
@@ -302,6 +323,8 @@ end
 
 assign dout = buf_cs ? (direct_access_obj ? obj_din : (direct_access_pal ? pal_din : buffer_din)) : 16'd0;
 assign busy = copy_state != IDLE;
+assign pal_busy = copy_state == COPY_PAL || copy_state == INIT_COPY_PAL;
+assign obj_busy = busy && ~pal_busy && copy_state != SCAN_OBJ && copy_state != INIT_SCAN_OBJ;
 
 assign buffer_we = ~busy & buf_cs & wr;
 assign buffer_addr = busy ? buffer_src_addr : addr;
@@ -309,8 +332,8 @@ assign buffer_addr = busy ? buffer_src_addr : addr;
 assign buffer_dout = din;
 
 assign obj_dout = direct_access_obj ? din : copy_dout;
-assign obj_addr = direct_access_obj ? addr : (busy ? copy_obj_addr : {obj_addr_high, obj_idx, 2'd0});
-assign obj_we = direct_access_obj ? (buf_cs & wr) : (busy ? copy_obj_we : 1'b0);
+assign obj_addr = direct_access_obj ? addr : (obj_busy ? copy_obj_addr : {obj_addr_high, obj_idx, 2'd0});
+assign obj_we = direct_access_obj ? (buf_cs & wr) : (obj_busy ? copy_obj_we : 1'b0);
 
 assign pal_dout = direct_access_pal ? din : copy_dout;
 assign pal_addr = {1'b0, direct_access_pal ? addr[10:0] : (busy ? copy_pal_addr : 11'd0)};

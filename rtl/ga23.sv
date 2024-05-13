@@ -77,11 +77,12 @@ reg [15:0] misc_reg;
 
 assign hsync = hcnt < 10'd71 || hcnt > 10'd454;
 assign hblank = hcnt < 10'd101 || hcnt > 10'd422;
-assign vblank = vcnt > 10'd367 || vcnt < 10'd144;
+wire vblank_wide = vcnt > 10'd367 || vcnt < 10'd144;
+assign vblank = vcnt > 10'd375 || vcnt < 10'd136;
 assign vsync = vcnt > 10'd114 && vcnt < 10'd125;
 assign hpulse = hcnt == 10'd46;
 assign vpulse = (vcnt == 10'd124 && hcnt > 10'd260) || (vcnt == 10'd125 && hcnt < 10'd260);
-assign color_blank = hblank | vblank | misc_reg[0];
+assign color_blank = hblank | vblank | misc_reg[0] | (~misc_reg[2] & vblank_wide);
 
 wire [9:0] VE = vcnt ^ {1'b0, {9{NL}}};
 
