@@ -412,7 +412,7 @@ address_translator address_translator(
     .bank_select
 );
 
-wire vblank, hblank, vsync, hsync, vpulse, hpulse, hint, color_blank;
+wire ga23_vblank, ga23_hblank, ga23_vsync, ga23_hsync, vpulse, hpulse, hint, ga23_color_blank;
 
 m107_pic m107_pic(
     .clk(clk_sys),
@@ -430,14 +430,9 @@ m107_pic m107_pic(
     .int_vector(int_vector),
     .int_ack(INTACK),
 
-    .intp({4'd0, snd_latch_rdy, hint, ~dma_busy, vblank})
+    .intp({4'd0, snd_latch_rdy, hint, ~dma_busy, VBlank})
 );
 
-
-assign HSync = hsync;
-assign HBlank = hblank;
-assign VSync = vsync;
-assign VBlank = vblank;
 
 wire objram_we;
 wire [15:0] objram_data, objram_q;
@@ -492,7 +487,11 @@ palram palram(
 
     .vid_ctrl(vid_ctrl),
 
-    .color_blank,
+    .vblank_in(ga23_vblank),
+    .hblank_in(ga23_hblank),
+    .vsync_in(ga23_vsync),
+    .hsync_in(ga23_hsync),
+    .color_blank_in(ga23_color_blank),
 
     .dma_busy(pal_busy),
 
@@ -512,7 +511,11 @@ palram palram(
     .din(ga21_palram_dout),
     .dout(palram_q),
 
-    .rgb_out(rgb_color)
+    .rgb_out(rgb_color),
+    .vblank_out(VBlank),
+    .hblank_out(HBlank),
+    .vsync_out(VSync),
+    .hsync_out(HSync)
 );
 
 wire [24:0] sdr_ga21_addr, sdr_ga22_addr;
@@ -659,14 +662,14 @@ GA23 ga23(
     .sdr_req(sdr_bg_req),
     .sdr_rdy(sdr_bg_rdy),
 
-    .vblank(vblank),
-    .hblank(hblank),
-    .vsync(vsync),
-    .hsync(hsync),
+    .vblank(ga23_vblank),
+    .hblank(ga23_hblank),
+    .vsync(ga23_vsync),
+    .hsync(ga23_hsync),
     .hpulse(hpulse),
     .vpulse(vpulse),
 
-    .color_blank,
+    .color_blank(ga23_color_blank),
 
     .hint(hint),
 

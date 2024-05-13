@@ -23,7 +23,12 @@ module palram(
 
     input [15:0] vid_ctrl,
     input dma_busy,
-    input color_blank,
+    input color_blank_in,
+    input vblank_in,
+    input hblank_in,
+    input vsync_in,
+    input hsync_in,
+
 
     input [9:0] cpu_addr,
 
@@ -41,7 +46,11 @@ module palram(
     input [15:0] din,
     output [15:0] dout,
 
-    output reg [15:0] rgb_out
+    output reg [15:0] rgb_out,
+    output reg vblank_out,
+    output reg hblank_out,
+    output reg vsync_out,
+    output reg hsync_out
 );
 
 wire obj_pal_bank = 0; // TODO ~vid_ctrl[13] & obj_prio;
@@ -80,8 +89,11 @@ singleport_unreg_ram #(.widthad(13), .width(16), .name("PALRAM")) ram
 reg cb;
 always_ff @(posedge clk) begin
     if (ce_pix) begin
-        cb <= color_blank;
-        rgb_out <= cb ? 16'd0 : dout;
+        rgb_out <= color_blank_in ? 16'd0 : dout;
+        vblank_out <= vblank_in;
+        hblank_out <= hblank_in;
+        vsync_out <= vsync_in;
+        hsync_out <= hsync_in;
     end
 end
 

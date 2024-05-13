@@ -52,16 +52,15 @@ module GA23(
     output sdr_req,
     input sdr_rdy,
 
-    output vblank,
-    output vsync,
-    output hblank,
-    output hsync,
-    output color_blank,
+    output reg vblank,
+    output reg vsync,
+    output reg hblank,
+    output reg hsync,
+    output reg color_blank,
 
-    output hpulse,
-    output vpulse,
-
-    output hint,
+    output reg hpulse,
+    output reg vpulse,
+    output reg hint,
 
     output reg [10:0] color_out,
     output reg prio_out,
@@ -75,21 +74,12 @@ reg [9:0] hcnt, vcnt;
 reg [9:0] hint_line;
 reg [15:0] misc_reg;
 
-assign hsync = hcnt < 10'd71 || hcnt > 10'd454;
-assign hblank = hcnt < 10'd101 || hcnt > 10'd422;
-wire vblank_wide = vcnt > 10'd367 || vcnt < 10'd144;
-assign vblank = vcnt > 10'd375 || vcnt < 10'd136;
-assign vsync = vcnt > 10'd114 && vcnt < 10'd125;
-assign hpulse = hcnt == 10'd46;
-assign vpulse = (vcnt == 10'd124 && hcnt > 10'd260) || (vcnt == 10'd125 && hcnt < 10'd260);
-assign color_blank = hblank | vblank | misc_reg[0] | (~misc_reg[2] & vblank_wide);
-
 wire [9:0] VE = vcnt ^ {1'b0, {9{NL}}};
 
-assign hint = VE == hint_line && hcnt > 10'd422 && ~paused;
-
-
 always_ff @(posedge clk) begin
+    bit _vblank_wide;
+    bit _hblank, _vblank;
+
     if (ce_pix) begin
         hcnt <= hcnt + 10'd1;
         if (hcnt == 10'd469) begin
@@ -99,6 +89,19 @@ always_ff @(posedge clk) begin
                 vcnt <= 10'd114;
             end
         end
+
+        _vblank_wide = vcnt > 10'd367 || vcnt < 10'd144;
+        _hblank = hcnt < 10'd102 || hcnt > 10'd421;
+        _vblank = vcnt > 10'd375 || vcnt < 10'd136;
+
+        hblank <= _hblank;
+        vblank <= _vblank;
+        hsync <= hcnt < 10'd71 || hcnt > 10'd454;
+        vsync <= vcnt > 10'd114 && vcnt < 10'd125;
+        hpulse <= hcnt == 10'd46;
+        vpulse <= (vcnt == 10'd124 && hcnt > 10'd260) || (vcnt == 10'd125 && hcnt < 10'd260);
+        color_blank <= _hblank | _vblank | misc_reg[0] | (~misc_reg[2] & _vblank_wide);
+        hint <= VE == hint_line && hcnt > 10'd422 && ~paused;
     end
 end
 
