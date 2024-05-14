@@ -12,6 +12,7 @@ Standard MAME keyboard controls are also supported for up to 4-players.
 
 ## Thanks
 Many people, knowingly or not, contributed to this work.
+- Grinning Cat and XtraSmiley for helping me acquire an M107 PCB.
 - Mark, for his R-Type Leo PCB and his support through the years.
 - @sorgelig, for developing and maintaining MiSTer.
 - @RobertPeip, for the v30mz cpu I am using as the basis for the v33 & v35.
