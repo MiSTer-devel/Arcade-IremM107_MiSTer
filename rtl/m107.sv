@@ -279,9 +279,9 @@ reg [3:0] bank_select = 4'd0;
 
 
 wire [7:0] switches_p1 = board_cfg.kick_harness ? { p1_input[4], p1_input[5], p1_input[6], 1'b0,             p1_input[3], p1_input[2], p1_input[1], p1_input[0] }
-                                                : { p1_input[4], p1_input[5], 1'b0,        1'b0,             p1_input[3], p1_input[2], p1_input[1], p1_input[0] };
+                                                : { p1_input[4], p1_input[5], p1_input[6], 1'b0,             p1_input[3], p1_input[2], p1_input[1], p1_input[0] };
 wire [7:0] switches_p2 = board_cfg.kick_harness ? { p2_input[4], p2_input[5], p2_input[6], 1'b0,             p2_input[3], p2_input[2], p2_input[1], p2_input[0] }
-                                                : { p2_input[4], p2_input[5], 1'b0,        1'b0,             p2_input[3], p2_input[2], p2_input[1], p2_input[0] };
+                                                : { p2_input[4], p2_input[5], p2_input[6], 1'b0,             p2_input[3], p2_input[2], p2_input[1], p2_input[0] };
 wire [7:0] switches_p3 = board_cfg.kick_harness ? { 1'b0,        1'b0,        1'b0,        1'b0,             1'b0,        1'b0,        1'b0,        1'b0        }
                                                 : { p3_input[4], p3_input[5], coin[2],     start_buttons[2], p3_input[3], p3_input[2], p3_input[1], p3_input[0] };
 wire [7:0] switches_p4 = board_cfg.kick_harness ? { p2_input[9], p2_input[8], p2_input[7], 1'b0,             p1_input[9], p1_input[8], p1_input[7], 1'b0        }
