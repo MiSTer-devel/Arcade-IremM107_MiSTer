@@ -247,6 +247,7 @@ localparam CONF_STR = {
     "P2O[65],Layer 2,On,Off;",
     "P2O[66],Layer 3,On,Off;",
     "P2O[67],Layer 4,On,Off;",
+    "P2-;",
     "P2O[68],Solid Sprites,Off,On;",
     "-;",
     "T[0],Reset;",
