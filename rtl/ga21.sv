@@ -127,7 +127,7 @@ wire inst_flipx = inst_obj[8];
 wire inst_flipy = inst_obj[9];
 wire inst_end = inst_obj[15];
 wire [9:0] inst_x = inst_obj[57:48];
-wire [9:0] inst_height_px = inst_height == 0 ? 10'd16 : inst_height == 1 ? 10'd32 : inst_height == 3 ? 10'd48 : 10'd64;
+wire [9:0] inst_height_px = inst_height == 0 ? 10'd16 : inst_height == 1 ? 10'd32 : inst_height == 2 ? 10'd64 : 10'd128;
 
 reg [15:0] delay_cnt;
 
