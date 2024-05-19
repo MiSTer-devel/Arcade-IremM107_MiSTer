@@ -120,8 +120,9 @@ always @(posedge clk) begin
     reg       ch1_rq, ch2_rq, ch3_rq, ch4_rq;
     reg [1:0] ch;
 
+    reg [26:1] ch1_addr_1, ch2_addr_1, ch3_addr_1, ch4_addr_1;
+
     reg        ch3_rnw_1;
-    reg [26:1] ch3_addr_1;
     reg [15:0] ch3_din_1;
     reg [ 1:0] ch3_be_1;
     
@@ -136,14 +137,18 @@ always @(posedge clk) begin
     ch3_addr_1 <= ch3_addr;
     ch3_din_1  <= ch3_din;
     ch3_be_1   <= ch3_be;
-    
+
+    ch1_addr_1 <= ch1_addr;
+    ch2_addr_1 <= ch2_addr;
+    ch4_addr_1 <= ch4_addr;
+
     doRefresh_1 <= doRefresh;
 
     if (ch1_req & ~ch1_req_1) ch1_rq <= 1;
     if (ch2_req & ~ch2_req_1) ch2_rq <= 1;
     if (ch3_req & ~ch3_req_1) ch3_rq <= 1;
     if (ch4_req & ~ch4_req_1) ch4_rq <= 1;
-
+        
     ch1_ready <= 0;
     ch2_ready <= 0;
     ch3_ready <= 0;
@@ -237,8 +242,8 @@ always @(posedge clk) begin
                 chip          <= 0;
             end 
             else if(ch2_rq) begin
-                {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {2'b00, 1'b1, ch2_addr[25:1]};
-                chip       <= ch2_addr[26];
+                {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {2'b00, 1'b1, ch2_addr_1[25:1]};
+                chip       <= ch2_addr_1[26];
                 saved_wr   <= 0;
                 ch         <= 1;
                 ch2_rq     <= 0;
@@ -246,8 +251,8 @@ always @(posedge clk) begin
                 state      <= STATE_WAIT;
             end
             else if(ch1_rq) begin
-                {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {2'b00, 1'b1, ch1_addr[25:1]};
-                chip       <= ch1_addr[26];
+                {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {2'b00, 1'b1, ch1_addr_1[25:1]};
+                chip       <= ch1_addr_1[26];
                 saved_wr   <= 0;
                 ch         <= 0;
                 ch1_rq     <= 0;
@@ -268,8 +273,8 @@ always @(posedge clk) begin
                 state      <= STATE_WAIT;
             end
             else if(ch4_rq) begin
-                {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {2'b00, 1'b1, ch4_addr[25:1]};
-                chip       <= ch4_addr[26];
+                {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {2'b00, 1'b1, ch4_addr_1[25:1]};
+                chip       <= ch4_addr_1[26];
                 saved_wr   <= 0;
                 ch         <= 3;
                 ch4_rq     <= 0;
