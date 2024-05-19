@@ -311,7 +311,7 @@ always @(posedge clk_sys) begin
         sound_reset <= 1'd0;
     end else begin
         if (IOWR && cpu_word_addr == 8'h02) sys_flags <= cpu_mem_out[7:0];
-        if (IOWR && cpu_word_addr == 8'h20) bank_select <= cpu_mem_out[3:0];
+        if (IOWR && cpu_word_addr == 8'h06) bank_select <= cpu_mem_out[3:0];
         if (IOWR && cpu_word_addr == 8'hc0) sound_reset <= ~cpu_mem_out[0];
     end
 end
@@ -536,6 +536,8 @@ GA21 ga21(
 
     .reset(),
 
+    .direct_sprites(board_cfg.direct_sprites),
+
     .addr(cpu_mem_addr[12:1]),
     .din(cpu_mem_out),
     .dout(ga21_dout),
@@ -655,7 +657,6 @@ GA23 ga23(
     .vram_we(vram_we),
 
     .NL(NL),
-    .large_tileset(board_cfg.large_tileset),
 
     .sdr_data(sdr_bg_dout),
     .sdr_addr(sdr_bg_addr),

@@ -45,8 +45,6 @@ module GA23(
 
     input NL,
 
-    input large_tileset,
-
     input [63:0] sdr_data,
     output [24:0] sdr_addr,
     output sdr_req,
@@ -287,14 +285,7 @@ always_ff @(posedge clk) begin
                     prio_out <= layer_prio[0] | layer_prio[1] | layer_prio[2] | layer_prio[3];
 
                     // determine base opaque color
-                    if (layer_enabled[3])
-                        color_out <= layer_color[3];
-                    else if (layer_enabled[2])
-                        color_out <= layer_color[2];
-                    else if (layer_enabled[1])
-                        color_out <= layer_color[1];
-                    else
-                        color_out <= layer_color[0];
+                    color_out <= layer_color[3];
 
                     // override with transparent
                     if (|layer_color[0][3:0]) begin
@@ -403,7 +394,6 @@ generate
             .ce_pix(ce_pix),
 
             .NL(NL),
-            .large_tileset(large_tileset),
 
             .control(_control),
 

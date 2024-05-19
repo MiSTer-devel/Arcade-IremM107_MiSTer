@@ -50,10 +50,10 @@ package m107_pkg;
     
     typedef struct packed {
         bit       debug_board;
-        bit       large_tileset;
+        bit       unused0;
         bit       kick_harness;
-        bit       wide_sprites;
-        bit       alt_map;
+        bit       unused1;
+        bit       direct_sprites;
         bit [3:0] bank_mask;
     } board_cfg_t;
 endpackage

@@ -22,8 +22,6 @@ module ga23_layer(
 
     input NL,
 
-    input large_tileset,
-
     // io registers
     input [15:0] control,
 

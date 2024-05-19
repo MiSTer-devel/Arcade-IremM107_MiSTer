@@ -70,9 +70,7 @@ always_comb begin
 	20'b1111_1111_1111_1111_xxxx: begin cpu_rom_memrq = 1; rom_addr = { 16'h7fff, A[3:0] }; end
 	// 0x00000-0xbffff
 	default: begin
-		if (board_cfg.alt_map && A[19:16] == 4'h8) begin
-			pf_vram_memrq = 1;
-		end else if (board_cfg.debug_board && A[19:16] == 4'hb) begin
+		if (board_cfg.debug_board && A[19:16] == 4'hb) begin
 			timer_memrq = 1;
 		end else begin
 			cpu_rom_memrq = 1;

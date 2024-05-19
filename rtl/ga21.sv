@@ -24,6 +24,8 @@ module GA21(
 
     input reset,
 
+    input direct_sprites,
+
     input [15:0] din,
     output [15:0] dout,
 
@@ -89,7 +91,11 @@ enum {
     WRITE_INST0,
     WRITE_INST1,
     WRITE_INST2,
-    WRITE_INST3
+    WRITE_INST3,
+    COPY_BASE0,
+    COPY_BASE1,
+    COPY_BASE2,
+    COPY_BASE3
 } copy_state = IDLE;
 
 
@@ -100,8 +106,6 @@ reg [11:0] copy_pal_addr;
 reg [8:0] copy_obj_idx;
 reg [11:0] buffer_src_addr;
 reg [11:0] next_buffer_src_addr;
-reg [2:0] copy_layer;
-reg copy_this_obj;
 
 reg copy_obj_we, copy_pal_we;
 
@@ -157,15 +161,7 @@ always_ff @(posedge clk) begin
     end else begin
 
         if (reg_cs & wr) begin
-            if (din[11]) begin
-                copy_state <= INIT_SCAN_OBJ;
-            end
-            //if (addr == 12'h0) reg_obj_ptr <= din[7:0];
-            //if (addr == 12'h1) reg_direct_access <= din[7:0];
-            //if (addr == 12'h2) reg_copy_mode <= din[15:0];
-            //if (addr == 12'h4) begin
-            //    copy_state <= INIT_COPY_PAL;
-            //end
+            copy_state <= INIT_SCAN_OBJ;
         end
 
         if (ce) begin
@@ -217,14 +213,56 @@ always_ff @(posedge clk) begin
                     copy_state <= INIT_COPY_OBJ;
                 end
             end
-            INIT_COPY_OBJ: begin
-                copy_state <= READ_BASE0;
-                copy_this_obj <= 0;
-                buffer_src_addr <= 12'd4;
-                copy_layer <= 3'd0;
-                copy_obj_idx <= 9'h1ff;
+
+            COPY_BASE0: begin
+                if (buffer_src_addr[11]) begin
+                    copy_state <= IDLE_DELAY;
+                end else begin
+                    copy_dout <= { buffer_din[15:13], 2'b00, buffer_din[12:11], buffer_din[8:0] }; // zero out width
+                    buffer_src_addr <= buffer_src_addr + 12'd1;
+                    copy_obj_addr <= {copy_obj_idx, 2'b00};
+                    copy_obj_we <= 1;
+                    copy_state <= COPY_BASE1;
+                end
             end
 
+            COPY_BASE1: begin
+                copy_dout <= buffer_din;
+                buffer_src_addr <= buffer_src_addr + 12'd1;
+                copy_obj_addr <= {copy_obj_idx, 2'b01};
+                copy_obj_we <= 1;
+                copy_state <= COPY_BASE2;
+            end
+
+            COPY_BASE2: begin
+                copy_dout <= buffer_din;
+                buffer_src_addr <= buffer_src_addr + 12'd1;
+                copy_obj_addr <= {copy_obj_idx, 2'b10};
+                copy_obj_we <= 1;
+                copy_state <= COPY_BASE3;
+            end
+
+            COPY_BASE3: begin
+                copy_dout <= buffer_din;
+                buffer_src_addr <= buffer_src_addr + 12'd1;
+                copy_obj_addr <= {copy_obj_idx, 2'b11};
+                copy_obj_we <= 1;
+                copy_state <= COPY_BASE0;
+                copy_obj_idx <= copy_obj_idx - 9'd1;
+            end
+
+            INIT_COPY_OBJ: begin
+                if (direct_sprites) begin // TODO MHEN
+                    copy_state <= COPY_BASE0;
+                    buffer_src_addr <= 12'd8;
+                    copy_obj_idx <= 9'h1fe;
+                end else begin
+                    copy_state <= READ_BASE0;
+                    buffer_src_addr <= 12'd4;
+                    copy_obj_idx <= 9'h1ff;
+                end
+            end
+         
             READ_BASE0: begin
                 if (buffer_din[15:0] == 16'he000) begin
                     copy_state <= READ_BASE0;
